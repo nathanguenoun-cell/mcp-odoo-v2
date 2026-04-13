@@ -27,7 +27,17 @@ dotenv.config();
 
 const app = express();
 const PORT = parseInt(process.env.PORT ?? '3000');
-const BASE_URL = (process.env.BASE_URL ?? `http://localhost:${PORT}`).replace(/\/$/, '');
+
+// AUTO-DETECT BASE_URL:
+// 1. Explicit BASE_URL env var (recommended, highest priority)
+// 2. Railway's auto-set RAILWAY_PUBLIC_DOMAIN (works without any config on Railway)
+// 3. Local fallback
+function resolveBaseUrl(): string {
+  if (process.env.BASE_URL) return process.env.BASE_URL.replace(/\/$/, '');
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  return `http://localhost:${PORT}`;
+}
+const BASE_URL = resolveBaseUrl();
 
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'DELETE', 'OPTIONS'], allowedHeaders: ['*'] }));
 app.use(express.json());
