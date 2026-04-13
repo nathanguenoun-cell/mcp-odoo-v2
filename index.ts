@@ -196,15 +196,23 @@ async function detectDb(url: string): Promise<string | null> {
 // OAUTH ENDPOINTS — these give Dust the native "Connect" button
 // ============================================================
 
-/** RFC 9728 — OAuth 2.0 Protected Resource Metadata */
-app.get('/.well-known/oauth-protected-resource', (_req, res) => {
+/**
+ * RFC 9728 — OAuth 2.0 Protected Resource Metadata
+ * Registered at both the root path AND the /mcp suffix path.
+ * When a user enters https://host/mcp in Dust, Dust constructs the well-known
+ * URL as /.well-known/oauth-protected-resource/mcp (RFC 9728 §2, path-based
+ * discovery appends the resource path). Both variants must return valid metadata.
+ */
+const protectedResourceMetadata = (_req: Request, res: Response) => {
   res.json({
     resource: BASE_URL,
     authorization_servers: [BASE_URL],
     scopes_supported: ['odoo'],
     bearer_methods_supported: ['header'],
   });
-});
+};
+app.get('/.well-known/oauth-protected-resource', protectedResourceMetadata);
+app.get('/.well-known/oauth-protected-resource/mcp', protectedResourceMetadata);
 
 /** RFC 8414 — OAuth 2.0 Authorization Server Metadata */
 app.get('/.well-known/oauth-authorization-server', (_req, res) => {
